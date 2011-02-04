@@ -31,18 +31,63 @@ class EventResourceCalendar extends FormField {
 	}
 
 	public function bookings($request) {
-		$start = (int) $request->getVar('start');
-		$end   = (int) $request->getVar('end');
-
+		$start  = (int) $request->getVar('start');
+		$end    = (int) $request->getVar('end');
 		$result = array();
-		$events = $this->parent->Events(sprintf(
-			'"StartDate" BETWEEN \'%1$s\' AND \'%2$s\'
-			OR "EndDate" BETWEEN \'%1$s\' AND \'%2$s\'
-			OR ("StartDate" < \'%1$s\' AND "EndDate" > \'%2$s\')',
-			date('Y-m-d', $start), date('Y-m-d', $end)
-		));
 
-		if ($events) foreach ($events as $event) {
+		// First load standard non-recurring events that fall between the start
+		// and end date.
+		$events = $this->parent->Events(
+			sprintf(
+				'"CalendarEvent"."Recursion" = 0 AND (
+					"StartDate" BETWEEN \'%1$s\' AND \'%2$s\'
+					OR "EndDate" BETWEEN \'%1$s\' AND \'%2$s\'
+					OR ("StartDate" < \'%1$s\' AND "EndDate" > \'%2$s\')
+				)',
+				date('Y-m-d', $start), date('Y-m-d', $end)),
+			null,
+			'INNER JOIN "CalendarEvent" ON "CalendarEvent"."ID" = "CalendarDateTime"."EventID"');
+
+		// Then load every recurring event and see if they fall between the start
+		// and end.
+		$recurring = $this->parent->Events(
+			sprintf(
+				'"CalendarEvent"."Recursion" = 1
+				AND ("EndDate" IS NULL OR "EndDate" > \'%s\')
+				AND ("StartDate" IS NULL OR "StartDate" < \'%s\')',
+				date('Y-m-d', $start), date('Y-m-d', $end)
+			),
+			null,
+			'INNER JOIN "CalendarEvent" ON "CalendarEvent"."ID" = "CalendarDateTime"."EventID"');
+
+		// Now loop through each day in the specified date range, and check
+		// each recurring date to see if it occurs on that day. Note that
+		// recurring events always start and end on the same day.
+		if ($recurring) foreach ($recurring as $datetime) {
+			$counter = $start;
+			$days    = 0;
+
+			while ($counter <= $end) {
+				if ($counter > strtotime($datetime->EndDate)) {
+					break;
+				}
+
+				if ($datetime->Event()->recursionHappensOn($counter)) {
+					$_datetime = clone $datetime;
+
+					$_datetime->ID        = -1;
+					$_datetime->StartDate = date('Y-m-d', $counter);
+					$_datetime->EndDate   = date('Y-m-d', $counter);
+
+					$events->push($_datetime);
+				}
+
+				$counter = sfTime::add($counter, 1, sfTime::DAY);
+				$days++;
+			}
+		}
+
+		foreach ($events as $event) {
 			$title = $event->EventTitle();
 
 			if ($this->parent->Type != 'Single') {
