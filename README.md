@@ -13,6 +13,7 @@ events.
 ## Requirements
 *  SilverStripe 2.4+
 *  The Event Calendar Module
+*  The Item Set Field Module
 
 ## Project Links
 *  [GitHub Project Page](https://github.com/ajshort/silverstripe-eventresources)
