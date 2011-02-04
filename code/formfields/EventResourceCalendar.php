@@ -38,7 +38,7 @@ class EventResourceCalendar extends FormField {
 		$events = $this->parent->Events(sprintf(
 			'"StartDate" BETWEEN \'%1$s\' AND \'%2$s\'
 			OR "EndDate" BETWEEN \'%1$s\' AND \'%2$s\'
-			OR "StartDate" < \'%1$s\' AND "EndDate" > \'%2$s\'',
+			OR ("StartDate" < \'%1$s\' AND "EndDate" > \'%2$s\')',
 			date('Y-m-d', $start), date('Y-m-d', $end)
 		));
 
