@@ -16,8 +16,6 @@ class EventResourceAdmin extends ModelAdmin {
 
 	public function init() {
 		parent::init();
-
-		Requirements::javascript(THIRDPARTY_DIR . '/jquery-livequery/jquery.livequery.js');
 		Requirements::javascript('eventresources/javascript/EventResourceAdmin.js');
 	}
 
