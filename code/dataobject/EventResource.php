@@ -103,13 +103,13 @@ class EventResource extends DataObject {
 		);
 		$filter = "\"CalendarDateTimeID\" <> {$time->ID} AND ($filter)";
 
-		$bookings = $this->Events($filter);
+		$bookings = $this->Events($filter)->toArray('ID');
 
 		// Since the event calendar doesn't use a proper date time storage, we
 		// need to manually filter events again here.
-		foreach ($bookings as $booking) {
+		foreach ($bookings as $id => $booking) {
 			if ($booking->getEndTimestamp() < $start || $booking->getStartTimestamp() > $end) {
-				$bookings->remove($booking);
+				unset($bookings[$id]);
 			}
 		}
 
