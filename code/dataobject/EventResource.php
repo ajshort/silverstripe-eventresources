@@ -13,6 +13,10 @@ class EventResource extends DataObject {
 		'Quantity'    => 'Int'
 	);
 
+	public static $belongs_many_many = array(
+		'Events' => 'CalendarDateTime'
+	);
+
 	public static $summary_fields = array(
 		'Title',
 		'Description',
@@ -31,6 +35,33 @@ class EventResource extends DataObject {
 		return $fields;
 	}
 
+	/**
+	 * @return FieldSet
+	 */
+	public function getCmsExtraFields() {
+		switch ($this->Type) {
+			case 'Single':
+				$quantity = new ReadonlyField(
+					'OneAvailable', 'Quantity', '(One available)');
+				break;
+			case 'Limited':
+				$quantity = new DropdownField(
+					'BookingQuantity',
+					'Quantity',
+					ArrayLib::valuekey(range(1, $this->Quantity)),
+					null, null, true);
+				break;
+			case 'Unlimited':
+				$quantity = new NumericField('BookingQuantity', 'Quantity');
+				break;
+		}
+
+		return new FieldSet(
+			new ReadonlyField('Title', 'Resource title', $this->Title),
+			$quantity
+		);
+	}
+
 	public function validate() {
 		$result = parent::validate();
 
@@ -39,6 +70,18 @@ class EventResource extends DataObject {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function Summary() {
+		$summary = $this->Title;
+
+		if ($this->BookingQuantity) $summary .= " ({$this->BookingQuantity})";
+		if ($this->Description)     $summary .= "<br /><span>{$this->Description}</span>";
+
+		return $summary;
 	}
 
 }
