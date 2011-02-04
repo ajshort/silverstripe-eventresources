@@ -52,8 +52,8 @@ class EventResourceCalendar extends FormField {
 			$result[] = array(
 				'id'     => $event->ID,
 				'title'  => $title,
-				'start'  => strtotime($event->MicroformatStart()),
-				'end'    => strtotime($event->MicroformatEnd()),
+				'start'  => $event->getStartTimestamp(),
+				'end'    => $event->getEndTimestamp(),
 				'allDay' => (bool) $event->is_all_day,
 				'url'    => Controller::join_links('admin/show', $event->EventID)
 			);
