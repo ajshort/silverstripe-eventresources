@@ -81,6 +81,56 @@ class EventResource extends DataObject {
 	}
 
 	/**
+	 * Returns the number of this resource that are not booked during an event
+	 * time.
+	 *
+	 * @param  CalendarDateTime $time
+	 * @return bool|int
+	 */
+	public function getAvailableForEvent($time) {
+		if ($this->Type == 'Unlimited') {
+			return true;
+		}
+
+		$start = $time->getStartTimestamp();
+		$end   = $time->getEndTimestamp();
+
+		$filter = sprintf(
+			'"StartDate" BETWEEN \'%1$s\' AND \'%2$s\'
+			OR "EndDate" BETWEEN \'%1$s\' AND \'%2$s\'
+			OR ("StartDate" < \'%1$s\' AND "EndDate" > \'%2$s\')',
+			date('Y-m-d', $start), date('Y-m-d', $end)
+		);
+		$filter = "\"CalendarDateTimeID\" <> {$time->ID} AND ($filter)";
+
+		$bookings = $this->Events($filter);
+
+		// Since the event calendar doesn't use a proper date time storage, we
+		// need to manually filter events again here.
+		foreach ($bookings as $booking) {
+			if ($booking->getEndTimestamp() < $start || $booking->getStartTimestamp() > $end) {
+				$bookings->remove($booking);
+			}
+		}
+
+		if (!count($bookings)) {
+			return $this->Type == 'Limited' ? (int) $this->Quantity : true;
+		}
+
+		if ($this->Type == 'Single') {
+			return false;
+		}
+
+		$quantity = (int) $this->Quantity;
+
+		foreach ($bookings as $booking) {
+			$quantity -= $booking->BookingQuantity;
+		}
+
+		return $quantity > 0 ? $quantity : false;
+	}
+
+	/**
 	 * @return string
 	 */
 	public function Summary() {
