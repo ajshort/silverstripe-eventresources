@@ -30,7 +30,8 @@ class CalendarDateTimeResourcesExtension extends DataObjectDecorator {
 			'Resources',
 			'Booked Resources For This Event',
 			array(
-				'ExtraFields' => 'getCmsExtraFields'
+				'ExtraFields'        => 'getCmsExtraFields',
+				'ShowPickedInSearch' => false
 			))
 		);
 		$res->getSearchField()->setOption('FilterCallback', array(
