@@ -26,11 +26,19 @@ class EventResource extends DataObject {
 	public function getCMSFields() {
 		$fields = parent::getCMSFields();
 
+		$fields->removeByName('Events');
+
 		$fields->dataFieldByName('Type')->setSource(array(
 			'Single'    => 'There is one resource available',
 			'Limited'   => 'There are limited items of this resource available',
 			'Unlimited' => 'There is no limit on the quantity of this resource'
 		));
+
+		if ($this->isInDb()) {
+			$fields->addFieldToTab('Root.Bookings', new EventResourceCalendar(
+				$this, 'Bookings'
+			));
+		}
 
 		return $fields;
 	}
