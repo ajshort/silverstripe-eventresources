@@ -46,7 +46,7 @@ class EventResource extends DataObject {
 	/**
 	 * @return FieldSet
 	 */
-	public function getCmsExtraFields() {
+	public function getCmsExtraFields($time) {
 		switch ($this->Type) {
 			case 'Single':
 				$quantity = new ReadonlyField(
@@ -56,7 +56,7 @@ class EventResource extends DataObject {
 				$quantity = new DropdownField(
 					'BookingQuantity',
 					'Quantity',
-					ArrayLib::valuekey(range(1, $this->Quantity)),
+					ArrayLib::valuekey(range(1, $this->getAvailableForEvent($time))),
 					null, null, true);
 				break;
 			case 'Unlimited':

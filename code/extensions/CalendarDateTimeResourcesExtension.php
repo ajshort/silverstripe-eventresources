@@ -25,7 +25,7 @@ class CalendarDateTimeResourcesExtension extends DataObjectDecorator {
 			return;
 		}
 
-		$fields->addFieldToTab('Root.Resources', new ManyManyPickerField(
+		$fields->addFieldToTab('Root.Resources', $res = new ManyManyPickerField(
 			$this->owner,
 			'Resources',
 			'Booked Resources For This Event',
@@ -33,6 +33,16 @@ class CalendarDateTimeResourcesExtension extends DataObjectDecorator {
 				'ExtraFields' => 'getCmsExtraFields'
 			))
 		);
+		$res->getSearchField()->setOption('FilterCallback', array(
+			$this->owner, 'filterEventResource'
+		));
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function filterEventResource($resource) {
+		return (bool) $resource->getAvailableForEvent($this->owner);
 	}
 
 }
