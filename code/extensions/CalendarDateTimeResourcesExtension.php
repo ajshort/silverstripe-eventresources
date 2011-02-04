@@ -39,6 +39,10 @@ class CalendarDateTimeResourcesExtension extends DataObjectDecorator {
 		));
 	}
 
+	public function updateDateTimeTable($table) {
+		$table->setPopupSize(560, 650);
+	}
+
 	/**
 	 * If the event times have changed, it checks to make sure that the resources
 	 * are still available. If not, it throws a validation exception.
