@@ -56,7 +56,20 @@ class CalendarDateTimeResourcesExtension extends DataObjectDecorator {
 		if (!array_intersect_key(array_flip($check), $changed)) return;
 
 		foreach ($this->owner->Resources() as $resource) {
-			if (!$resource->getAvailableForEvent($this->owner)) {
+			if ($resource->Type == 'Limited') {
+				$avail = $resource->getAvailableForEvent($this->owner);
+
+				if ($resource->BookingQuantity > $avail) {
+					throw new ValidationException(new ValidationResult(false, sprintf(
+						'Changing the date of this event means there is only %d '     .
+						'of the "%s" resource available, whereas you have requested ' .
+						'%d. Please either select fewer of this resource from the '   .
+						'"Resources" tab, or change the date to one where there are ' .
+						'more available.',
+						$avail, $resource->Title, $resource->BookingQuantity
+					)));
+				}
+			} elseif (!$resource->getAvailableForEvent($this->owner)) {
 				throw new ValidationException(new ValidationResult(false, sprintf(
 					'Changing the date of this event means the "%s" resource ' .
 					'is no longer available. Please either remove this '       .
