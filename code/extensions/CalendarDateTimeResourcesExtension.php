@@ -94,11 +94,15 @@ class CalendarDateTimeResourcesExtension extends DataObjectDecorator {
 	 */
 	protected function checkResourceAvailability($resource, $ts = null) {
 		$datetime = $this->owner;
+		$date     = null;
 
 		if ($ts) {
 			$datetime = clone $datetime;
+
 			$datetime->StartDate = date('Y-m-d', $ts);
 			$datetime->EndDate   = date('Y-m-d', $ts);
+
+			$date = ' on ' . $datetime->obj('StartDate')->Nice();
 		}
 
 		if ($resource->Type == 'Limited') {
@@ -106,21 +110,21 @@ class CalendarDateTimeResourcesExtension extends DataObjectDecorator {
 
 			if ($resource->BookingQuantity > $avail) {
 				throw new ValidationException(new ValidationResult(false, sprintf(
-					'Changing the date of this event means there is only %d '     .
-					'of the "%s" resource available, whereas you have requested ' .
-					'%d. Please either select fewer of this resource from the '   .
-					'"Resources" tab, or change the date to one where there are ' .
-					'more available.',
-					$avail, $resource->Title, $resource->BookingQuantity
+					'Changing the date of this event means there is only %d '    .
+					'of the "%s" resource available%s, whereas you have '        .
+					'requested %d. Please either select fewer of this resource ' .
+					'from the "Resources" tab, or change the date to one where ' .
+					'there are more available.',
+					$avail, $resource->Title, $date, $resource->BookingQuantity
 				)));
 			}
 		} elseif (!$resource->getAvailableForEvent($datetime)) {
 			throw new ValidationException(new ValidationResult(false, sprintf(
 				'Changing the date of this event means the "%s" resource ' .
-				'is no longer available. Please either remove this '       .
+				'is no longer available%s. Please either remove this '       .
 				'resource from the "Resources" tab, or change the date '   .
 				'to one where the resource has not already been booked.',
-				$resource->Title
+				$resource->Title, $date
 			)));
 		}
 	}
