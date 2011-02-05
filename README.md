@@ -27,8 +27,6 @@ If a resource is not shown in the list of resources, it probably means that all
 available resources have been booked for part of the event. You can use the
 event resources admin panel to check which event booked it.
 
-Note: Recurring events currently do not work with resource booking.
-
 ## Maintainer Contacts
 *  Andrew Short (<andrew@silverstripe.com.au>)
 
