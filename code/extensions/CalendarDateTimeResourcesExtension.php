@@ -56,28 +56,72 @@ class CalendarDateTimeResourcesExtension extends DataObjectDecorator {
 		if (!array_intersect_key(array_flip($check), $changed)) return;
 
 		foreach ($this->owner->Resources() as $resource) {
-			if ($resource->Type == 'Limited') {
-				$avail = $resource->getAvailableForEvent($this->owner);
+			if ($resource->Type == 'Unlimited') {
+				continue;
+			}
 
-				if ($resource->BookingQuantity > $avail) {
-					throw new ValidationException(new ValidationResult(false, sprintf(
-						'Changing the date of this event means there is only %d '     .
-						'of the "%s" resource available, whereas you have requested ' .
-						'%d. Please either select fewer of this resource from the '   .
-						'"Resources" tab, or change the date to one where there are ' .
-						'more available.',
-						$avail, $resource->Title, $resource->BookingQuantity
-					)));
+			// If this is a recurring event, then check all other non-recurring
+			// bookings for this resource to see if any conflict.
+			if ($this->owner->Event()->Recursion) {
+				$bookings = $resource->Events(
+					sprintf(
+						'"CalendarEvent"."Recursion" = 0 AND "CalendarDateTime"."ID" <> %d',
+						$this->owner->ID),
+					null,
+					'INNER JOIN "CalendarEvent" ON "CalendarEvent"."ID" = "CalendarDateTime"."EventID"');
+
+				foreach ($bookings as $booking) {
+					$counter = $booking->getStartTimestamp();
+					$end     = $booking->getEndTimestamp();
+
+					// Loop through each day the other booking falls on, to see
+					// if it could cause a conflict.
+					while ($counter < $end) {
+						if ($this->owner->Event()->recursionHappensOn($counter)) {
+							$this->checkResourceAvailability($resource, $counter);
+						}
+						$counter = sfTime::add($counter, 1, sfTime::DAY);
+					}
 				}
-			} elseif (!$resource->getAvailableForEvent($this->owner)) {
+			} else {
+				$this->checkResourceAvailability($resource);
+			}
+		}
+	}
+
+	/**
+	 * @throws ValidationException
+	 */
+	protected function checkResourceAvailability($resource, $ts = null) {
+		$datetime = $this->owner;
+
+		if ($ts) {
+			$datetime = clone $datetime;
+			$datetime->StartDate = date('Y-m-d', $ts);
+			$datetime->EndDate   = date('Y-m-d', $ts);
+		}
+
+		if ($resource->Type == 'Limited') {
+			$avail = $resource->getAvailableForEvent($datetime);
+
+			if ($resource->BookingQuantity > $avail) {
 				throw new ValidationException(new ValidationResult(false, sprintf(
-					'Changing the date of this event means the "%s" resource ' .
-					'is no longer available. Please either remove this '       .
-					'resource from the "Resources" tab, or change the date '   .
-					'to one where the resource has not already been booked.',
-					$resource->Title
+					'Changing the date of this event means there is only %d '     .
+					'of the "%s" resource available, whereas you have requested ' .
+					'%d. Please either select fewer of this resource from the '   .
+					'"Resources" tab, or change the date to one where there are ' .
+					'more available.',
+					$avail, $resource->Title, $resource->BookingQuantity
 				)));
 			}
+		} elseif (!$resource->getAvailableForEvent($datetime)) {
+			throw new ValidationException(new ValidationResult(false, sprintf(
+				'Changing the date of this event means the "%s" resource ' .
+				'is no longer available. Please either remove this '       .
+				'resource from the "Resources" tab, or change the date '   .
+				'to one where the resource has not already been booked.',
+				$resource->Title
+			)));
 		}
 	}
 
