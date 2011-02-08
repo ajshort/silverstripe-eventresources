@@ -1,0 +1,33 @@
+EventResource:
+  chairs:
+    Title: Chairs
+    Type: Unlimited
+  projectors:
+    Title: Data Projectors
+    Type: Limited
+    Quantity: 5
+  auditorium:
+    Title: Auditorium
+    Type: Single
+
+CalendarEvent:
+  event:
+    Title: Test Event
+
+CalendarDateTime:
+  first:
+    StartDate: 2011-01-02
+    StartTime: 10:00
+    EndDate: 2011-01-02
+    EndTime: 10:00
+    Event: =>CalendarEvent.event
+  second:
+    StartDate: 2011-01-02
+    EndDate: 2011-01-02
+    is_all_day: true
+    Event: =>CalendarEvent.event
+  third:
+    StartDate: 2011-01-03
+    EndDate: 2011-01-03
+    is_all_day: true
+    Event: =>CalendarEvent.event
