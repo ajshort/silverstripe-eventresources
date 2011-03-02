@@ -31,16 +31,13 @@ class CalendarDateTimeResourcesExtension extends DataObjectDecorator {
 			'Booked Resources For This Event',
 			array(
 				'ExtraFields'        => 'getCmsExtraFields',
-				'ShowPickedInSearch' => false
+				'ShowPickedInSearch' => false,
+				'PopupHeight'        => 350
 			))
 		);
 		$res->getSearchField()->setOption('FilterCallback', array(
 			$this->owner, 'filterEventResource'
 		));
-	}
-
-	public function updateDateTimeTable($table) {
-		$table->setPopupSize(560, 650);
 	}
 
 	/**
